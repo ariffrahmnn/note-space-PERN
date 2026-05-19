@@ -3,6 +3,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import noteRoutes from './routes/noteRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import collabRoutes from './routes/collabRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 dotenv.config({ path: '../.env' });
 
@@ -17,6 +20,9 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/notes', noteRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/notes/:id', collabRoutes);      // merge params sudah di-handle di collabRoutes
+app.use('/api/notifications', notificationRoutes);
 
 // Health check
 app.get('/api/health', (_, res) => res.json({ status: 'ok', time: new Date() }));

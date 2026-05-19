@@ -1,6 +1,7 @@
 import { LogOut, NotebookPen, Archive } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import NotificationBell from './NotificationBell.jsx';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -22,6 +23,7 @@ export default function Navbar() {
         </Link>
 
         <span className="text-sm text-gray-500 hidden sm:block">{user?.username}</span>
+        <NotificationBell /> 
         <button
           onClick={logout}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-500 transition-colors px-2 py-1.5 rounded-lg hover:bg-red-100"

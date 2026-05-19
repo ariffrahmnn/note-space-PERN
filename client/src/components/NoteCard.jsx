@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Pin, Trash2, Palette, Archive } from 'lucide-react';
+import { Pin, Trash2, Palette, Archive, Eye } from 'lucide-react';
+import { Users } from 'lucide-react';
+import CollabModal from './CollabModal.jsx';
 
-// Palet warna pastel Google Keep
 const COLORS = [
   { hex: '#ffffff', label: 'Default' },
   { hex: '#faafa8', label: 'Flamingo' },
@@ -19,10 +20,16 @@ const COLORS = [
 ];
 
 export default function NoteCard({ note, onUpdate, onDelete, onPin, isArchivePage = false }) {
+  const [showCollab, setShowCollab] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(note.title);
   const [editContent, setEditContent] = useState(note.content);
+
+  const isOwner = note.is_owner !== false;
+  const canEdit = isOwner || note.collab_role === 'editor';
+  const canPin = isOwner || note.collab_role != null;
+  const isShared = !isOwner;
 
   const handleColorChange = (hex) => {
     onUpdate(note.id, { background_color: hex });
@@ -44,8 +51,9 @@ export default function NoteCard({ note, onUpdate, onDelete, onPin, isArchivePag
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.2 }}
       className="group relative rounded-2xl border border-gray-200 p-4 mb-4 note-card-hover cursor-pointer"
-      style={{ backgroundColor: note.background_color || '#ffffff' }}
-      onClick={() => !showPalette && setEditing(true)}
+      style={{ backgroundColor: note.background_color || '#ffffff', 
+                cursor: canEdit ? 'pointer' : 'default' }}
+      onClick={() => !showPalette && canEdit && setEditing(true)}
     >
       {/* Pin indicator */}
       {note.is_pinned && (
@@ -80,6 +88,12 @@ export default function NoteCard({ note, onUpdate, onDelete, onPin, isArchivePag
         </div>
       ) : (
         <>
+        {isShared && (
+          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full
+                          bg-blue-50 text-blue-500 border border-blue-100 mb-1.5">
+            <Users size={10} /> Shared
+          </span>
+        )}
           {note.title && (
             <h3 className="font-courier font-bold text-gray-800 text-sm mb-1 pr-5">{note.title}</h3>
           )}
@@ -93,6 +107,7 @@ export default function NoteCard({ note, onUpdate, onDelete, onPin, isArchivePag
         onClick={e => e.stopPropagation()}
       >
         {/* Palette */}
+        {isOwner && (
         <div className="relative">
           <button
             onClick={() => setShowPalette(p => !p)}
@@ -118,8 +133,10 @@ export default function NoteCard({ note, onUpdate, onDelete, onPin, isArchivePag
             </div>
           )}
         </div>
+        )}
 
         {/* Pin */}
+        {canPin && (
         <button
           onClick={() => onPin(note.id)}
           className={`p-1.5 rounded-full hover:bg-black/10 ${note.is_pinned ? 'text-blue-500' : 'text-gray-500'}`}
@@ -127,8 +144,10 @@ export default function NoteCard({ note, onUpdate, onDelete, onPin, isArchivePag
         >
           <Pin size={15} />
         </button>
+        )}
 
         {/* Archive/Unarchive */}
+        {isOwner && (
         <button
           onClick={() => onUpdate(note.id, { is_archived: !note.is_archived })}
           className="p-1.5 rounded-full hover:bg-black/10 text-gray-500"
@@ -136,8 +155,21 @@ export default function NoteCard({ note, onUpdate, onDelete, onPin, isArchivePag
         >
           <Archive size={15} />
         </button>
+        )}
+
+        {/* Collaborate */}
+        {isOwner && (
+        <button
+          onClick={() => setShowCollab(true)}
+          className="p-1.5 rounded-full hover:bg-black/10 text-gray-500"
+          title="Undang kolaborator"
+        >
+          <Users size={15} />
+        </button>
+        )}
 
         {/* Delete */}
+        {isOwner && (
         <button
           onClick={() => onDelete(note.id)}
           className="p-1.5 rounded-full hover:bg-red-100 text-gray-500 hover:text-red-500 ml-auto"
@@ -145,7 +177,17 @@ export default function NoteCard({ note, onUpdate, onDelete, onPin, isArchivePag
         >
           <Trash2 size={15} />
         </button>
+        )}
+
+        {!canEdit && (
+         <span className="ml-auto text-[11px] text-gray-400 flex items-center gap-1">
+          <Eye size={11} /> Read-only
+         </span>
+)}
       </div>
+       {showCollab && (
+        <CollabModal note={note} onClose={() => setShowCollab(false)} />
+      )}
     </motion.div>
   );
 }

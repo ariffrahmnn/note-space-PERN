@@ -28,7 +28,12 @@ export const useNotes = () => {
 
   const updateNote = async (id, updates) => {
     const { data } = await axios.put(`/api/notes/${id}`, updates);
-    setNotes(prev => prev.map(n => n.id === id ? data : n));
+    setNotes(prev => {
+      if (data.is_archived) {
+        return prev.filter(n => n.id !== id);
+      }
+      return prev.map(n => n.id === id ? data : n);
+    });
     return data;
   };
 
@@ -37,8 +42,9 @@ export const useNotes = () => {
     setNotes(prev => prev.filter(n => n.id !== id));
   };
 
-  const togglePin = (id) => {
+  const togglePin = async (id) => {
     const note = notes.find(n => n.id === id);
+    if (!note) return null;
     return updateNote(id, { is_pinned: !note.is_pinned });
   };
 

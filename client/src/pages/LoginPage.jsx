@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { NotebookPen } from 'lucide-react';
@@ -10,6 +10,10 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setForm({ email: '', password: '' });
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,11 +45,12 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form autoComplete="off" onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">Email</label>
             <input
               type="email"
+              autoComplete="username"
               required
               value={form.email}
               onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
@@ -57,6 +62,7 @@ export default function LoginPage() {
             <label className="block text-xs font-medium text-gray-500 mb-1">Password</label>
             <input
               type="password"
+              autoComplete="new-password"
               required
               value={form.password}
               onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
