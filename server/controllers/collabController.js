@@ -47,9 +47,13 @@ export const inviteCollaborator = async (req, res) => {
 
     const invitee = inviteeCheck.rows[0];
     const note = noteCheck.rows[0];
+    const stripHtml = (value = '') =>
+      value.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+
     const noteTitle = note.is_encrypted
       ? decrypt(note.title)
       : note.title || 'Catatan tanpa judul';
+    const noteTitlePlain = stripHtml(noteTitle) || 'Catatan tanpa judul';
 
     // Insert kolaborasi (ON CONFLICT update role jika sudah ada)
     const { rows: collabRows } = await client.query(
@@ -78,7 +82,7 @@ export const inviteCollaborator = async (req, res) => {
         invitee_id,
         owner_id,
         collab.id,
-        `${senderName} mengundang kamu untuk berkolaborasi di catatan "${noteTitle}" sebagai ${role}.`,
+        `${senderName} mengundang kamu untuk berkolaborasi di catatan "${noteTitlePlain}" sebagai ${role}.`,
       ]
     );
 
@@ -87,6 +91,71 @@ export const inviteCollaborator = async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('inviteCollaborator error:', err.message);
+    res.status(500).json({ message: 'Server error.' });
+  } finally {
+    client.release();
+  }
+};
+
+const stripHtml = (value = '') =>
+  value.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+
+// DELETE /api/notes/:id/leave
+export const leaveCollaborator = async (req, res) => {
+  const { id: noteId } = req.params;
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const { rows } = await client.query(
+      `SELECT nc.id, nc.owner_id, n.title, n.is_encrypted
+       FROM note_collaborators nc
+       JOIN notes n ON n.id = nc.note_id
+       WHERE nc.note_id = $1
+         AND nc.invitee_id = $2
+         AND nc.status = 'accepted'`,
+      [noteId, req.user.id]
+    );
+
+    if (rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Kamu bukan kolaborator pada catatan ini atau sudah berhenti.' });
+    }
+
+    const collab = rows[0];
+    const noteTitle = collab.is_encrypted
+      ? decrypt(collab.title)
+      : collab.title || 'Catatan tanpa judul';
+    const noteTitlePlain = stripHtml(noteTitle) || 'Catatan tanpa judul';
+
+    const userInfo = await client.query(
+      'SELECT username FROM users WHERE id = $1',
+      [req.user.id]
+    );
+    const username = userInfo.rows[0]?.username || 'Seseorang';
+
+    await client.query(
+      `INSERT INTO notifications
+         (recipient_id, sender_id, type, note_collaborator_id, message)
+       VALUES ($1, $2, 'collab_left', NULL, $3)`,
+      [
+        collab.owner_id,
+        req.user.id,
+        `${username} berhenti berkolaborasi pada catatan "${noteTitlePlain}".`,
+      ]
+    );
+
+    await client.query(
+      'DELETE FROM note_collaborators WHERE id = $1',
+      [collab.id]
+    );
+
+    await client.query('COMMIT');
+    res.json({ message: 'Kamu berhasil berhenti berkolaborasi.' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('leaveCollaborator error:', err.message);
     res.status(500).json({ message: 'Server error.' });
   } finally {
     client.release();

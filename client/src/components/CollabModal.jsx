@@ -47,7 +47,15 @@ export default function CollabModal({ note, onClose }) {
         </div>
 
         <p className="text-xs text-gray-400 mb-4">
-          Catatan: <span className="font-medium text-gray-600">{note.title || 'Tanpa judul'}</span>
+          Catatan:{' '}
+          {note.title && /<[^>]+>/.test(note.title) ? (
+            <span
+              className="font-medium text-gray-600"
+              dangerouslySetInnerHTML={{ __html: note.title }}
+            />
+          ) : (
+            <span className="font-medium text-gray-600">{note.title || 'Tanpa judul'}</span>
+          )}
         </p>
 
         {/* Role selector */}

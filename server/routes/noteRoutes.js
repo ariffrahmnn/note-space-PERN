@@ -1,15 +1,15 @@
 import { Router } from 'express';
-import { getNotes, getArchivedNotes, createNote, updateNote, deleteNote, } from '../controllers/noteController.js';
+import { getNotes, createNote, updateNote, deleteNote, getNoteHistory, getArchivedNotes } from '../controllers/noteController.js';
 import protect from '../middleware/authMiddleware.js';
 
 const router = Router();
+router.use(protect);
 
-router.use(protect); // semua route notes butuh auth
-
-router.get('/', getNotes);
-router.get('/archived', getArchivedNotes);
-router.post('/', createNote);
-router.put('/:id', updateNote);
-router.delete('/:id', deleteNote);
+router.get('/',           getNotes);
+router.post('/',          createNote);
+router.get('/archived',   getArchivedNotes);
+router.put('/:id',        updateNote);
+router.delete('/:id',     deleteNote);
+router.get('/:id/history', getNoteHistory);  // <-- route baru
 
 export default router;
