@@ -3,9 +3,11 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
+import TaskList from '@tiptap/extension-task-list';
+import TaskItem from '@tiptap/extension-task-item';
 import {
   X, Bold, Italic, Heading1, Heading2,
-  List, Link2, Image as ImageIcon, Clock,
+  List, CheckSquare, Image as ImageIcon, Clock,
 } from 'lucide-react';
 import { useNoteHistory } from '../hooks/useNoteHistory.js';
 
@@ -54,6 +56,8 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
   const editor = useEditor({
     extensions: [
       StarterKit,
+      TaskList.configure({ HTMLAttributes: { class: 'task-list pl-0' } }),
+      TaskItem.configure({ nested: true, HTMLAttributes: { class: 'task-item flex items-center gap-3' } }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: { class: 'text-blue-500 underline cursor-pointer' },
@@ -138,6 +142,121 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
     }
   }, [editor, note, onSave, onClose]);
 
+  const handleToggleChecklist = async (itemId) => {
+    if (!canEdit) return;
+    const nextChecklist = (note.checklist || []).map(item =>
+      item.id === itemId ? { ...item, done: !item.done } : item
+    );
+    await onSave(note.id, { checklist: nextChecklist });
+  };
+
+  // Toggle a checkbox (task item) at the current line.
+  // Uses Tiptap TaskItem/TaskList commands so the checkbox appears at the
+  // beginning of the active block and the editor's selection is preserved.
+  const handleToggleCheckbox = () => {
+    if (!editor || !canEdit) return;
+
+    // Determine the block (line) boundaries and the cursor offset inside it.
+    const { state } = editor;
+    const { selection } = state;
+    const { $from } = selection;
+    const blockStart = $from.start();
+    const blockEnd = $from.end();
+    const cursorOffsetInBlock = selection.from - blockStart;
+
+    // Select the whole block to ensure toggle applies to the entire line
+    // regardless of where the cursor is.
+    try {
+      editor.chain().focus().setTextSelection({ from: blockStart, to: blockEnd }).run();
+    } catch (e) {
+      // setTextSelection may throw on some versions; fall back to a no-op selection
+    }
+
+    // Toggle using TipTap commands if available
+    if (editor.commands.toggleTaskItem) {
+      editor.chain().focus().toggleTaskItem().run();
+    } else if (editor.commands.toggleTaskList) {
+      editor.chain().focus().toggleTaskList().run();
+    } else {
+      // Fallback: insert an inline label with checkbox followed by text
+      try {
+        // If current block has text, replace it with a label that contains the checkbox and the text
+        const blockText = editor.state.doc.textBetween(blockStart, blockEnd, '\n');
+        const safeText = blockText.replaceAll('\n', '<br/>');
+        const html = `<label class=\"task-item inline-flex items-center gap-2\"><input type=\"checkbox\" class=\"task-checkbox\" /><span class=\"task-text\">${safeText}</span></label>`;
+        editor.chain().focus().deleteRange({ from: blockStart, to: blockEnd }).insertContentAt(blockStart, html).run();
+      } catch (err) {
+        console.error('handleToggleCheckbox fallback error:', err);
+      }
+    }
+
+    // Restore cursor to a sensible position: after the checkbox at the same
+    // logical offset within the line so the user can continue typing.
+    try {
+      // Heuristic: place cursor after the injected checkbox marker.
+      const postCheckboxOffset = blockStart + 2 + cursorOffsetInBlock;
+      editor.chain().focus().setTextSelection(postCheckboxOffset).run();
+    } catch (e) {
+      // ignore selection restore failures
+    }
+  };
+
+  const createChecklistItemId = () =>
+    window.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+  // Inject CSS for task checkbox styling and checked-line-through in editor
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (document.getElementById('deNotes-task-styles')) return;
+
+    const css = `
+    .task-list { list-style: none; padding-left: 0; }
+    .task-item { display: flex; align-items: center; gap: 0.5rem; }
+    .task-item .task-checkbox, .task-item input[type="checkbox"] { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 6px; border: 2px solid #cbd5e1; background: white; display: inline-grid; place-items: center; }
+    .task-item .task-checkbox:checked, .task-item input[type="checkbox"]:checked { background: #2563eb; border-color: #2563eb; }
+    .task-item .task-checkbox:checked::after, .task-item input[type="checkbox"]:checked::after { content: ''; width: 8px; height: 5px; border-left: 2px solid white; border-bottom: 2px solid white; transform: rotate(-45deg); display: block; }
+    .task-item .task-text, .task-item label > span, .task-item label > p { display: inline-block; }
+    .task-item .task-checkbox:checked + .task-text, .task-item input[type="checkbox"]:checked + .task-text, .task-item input[type="checkbox"]:checked + span { text-decoration: line-through; color: #6b7280; opacity: 0.6; }
+    .checked-item { text-decoration: line-through; opacity: 0.6; }
+    .checked-item input[type="checkbox"] { opacity: 0.6; }
+    .checked-item span { opacity: 0.6; }
+    `;
+
+    const style = document.createElement('style');
+    style.id = 'deNotes-task-styles';
+    style.appendChild(document.createTextNode(css));
+    document.head.appendChild(style);
+  }, []);
+
+  const handleAddChecklist = async () => {
+    if (!editor) return;
+
+    const selection = editor.state.selection;
+    const selectedText = editor.state.doc.textBetween(selection.from, selection.to, '\n').trim();
+    const currentLine = editor.state.selection.$from.parent.textContent.trim();
+
+    let text = selectedText || currentLine;
+    if (!text) {
+      const promptText = window.prompt('Masukkan teks checklist:');
+      if (!promptText) return;
+      text = promptText.trim();
+    }
+
+    const nextChecklist = [
+      ...(Array.isArray(note.checklist) ? note.checklist : []),
+      { id: createChecklistItemId(), text, done: false },
+    ];
+
+    await onSave(note.id, { checklist: nextChecklist });
+
+    if (selectedText) {
+      editor.chain().focus().deleteSelection().run();
+    } else if (currentLine) {
+      const { $from } = editor.state.selection;
+      editor.chain().focus().deleteRange({ from: $from.start(), to: $from.end() }).run();
+    }
+  };
+
   const imageInputRef = useRef(null);
 
   useEffect(() => {
@@ -145,11 +264,6 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
       editor.chain().focus().run();
     }
   }, [editor, canEdit]);
-
-  const handleAddLink = () => {
-    const url = window.prompt('Masukkan URL:');
-    if (url && editor) editor.chain().focus().setLink({ href: url }).run();
-  };
 
   const handleAddImage = () => {
     imageInputRef.current?.click();
@@ -236,8 +350,8 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
                 <List size={15} />
               </ToolBtn>
               <div className="w-px h-4 bg-gray-200 mx-1" />
-                <ToolBtn disabled={!canEdit} onClick={handleAddLink} title="Sisipkan link">
-                <Link2 size={15} />
+              <ToolBtn disabled={!canEdit} onClick={handleToggleCheckbox} title="Tambahkan checklist">
+                <CheckSquare size={15} />
               </ToolBtn>
               <ToolBtn disabled={!canEdit} onClick={handleAddImage} title="Upload gambar dari komputer">
                 <ImageIcon size={15} />
@@ -258,6 +372,46 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
             {/* Editor content */}
             <div className="flex-1 overflow-y-auto px-5 py-4">
               <EditorContent editor={editor} />
+
+              {(Array.isArray(note.checklist) ? note.checklist : []).length > 0 && (
+                <div className="mt-5 rounded-2xl border border-gray-200 bg-white/80 p-4 text-sm text-gray-700">
+                  <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Checklist
+                  </div>
+                  {(note.checklist || []).filter(item => !item.done).map(item => (
+                    <label key={item.id} className="flex items-start gap-2 mb-2 transition-all duration-300">
+                      <input
+                        type="checkbox"
+                        checked={item.done}
+                        disabled={!canEdit}
+                        onChange={e => handleToggleChecklist(item.id, e.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-all duration-300"
+                      />
+                      <span className="transition-all duration-300">
+                        {item.text}
+                      </span>
+                    </label>
+                  ))}
+                  {(note.checklist || []).filter(item => item.done).length > 0 && (
+                    <>
+                      <hr className="my-3 border-t border-gray-200 opacity-20" />
+                      {(note.checklist || []).filter(item => item.done).map(item => (
+                        <label key={item.id} className="flex items-start gap-2 mb-2 transition-all duration-300 text-gray-500">
+                          <input
+                            type="checkbox"
+                            checked
+                            disabled
+                            className="mt-1 h-4 w-4 rounded border-gray-300 text-gray-400 opacity-60 transition-all duration-300"
+                          />
+                          <span className="transition-all duration-300 line-through opacity-50 text-gray-500">
+                            {item.text}
+                          </span>
+                        </label>
+                      ))}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Footer */}

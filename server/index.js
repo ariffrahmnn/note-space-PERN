@@ -6,6 +6,7 @@ import noteRoutes from './routes/noteRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import collabRoutes from './routes/collabRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import pool from './config/db.js';
 
 dotenv.config({ path: '../.env' });
 
@@ -32,6 +33,21 @@ app.get('/api/health', (_, res) => res.json({ status: 'ok', time: new Date() }))
 app.use((req, res) => res.status(404).json({ message: `Route ${req.path} tidak ditemukan.` }));
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server berjalan di http://localhost:${PORT}`);
-});
+
+// Ensure DB schema/migrations: add checklist column if it's missing.
+const ensureChecklistColumn = async () => {
+  try {
+    await pool.query("ALTER TABLE notes ADD COLUMN IF NOT EXISTS checklist JSONB NOT NULL DEFAULT '[]'::jsonb;");
+    console.log('✅ checklist column ensured on notes table');
+  } catch (err) {
+    console.error('❌ Failed to ensure checklist column:', err.message);
+  }
+};
+
+// Start server after ensuring schema
+(async () => {
+  await ensureChecklistColumn();
+  app.listen(PORT, () => {
+    console.log(`🚀 Server berjalan di http://localhost:${PORT}`);
+  });
+})();

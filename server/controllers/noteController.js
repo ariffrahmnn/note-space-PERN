@@ -73,9 +73,9 @@ export const getArchivedNotes = async (req, res) => {
 
 // ─── POST /api/notes ─────────────────────────────────────────────────────────
 export const createNote = async (req, res) => {
-  const { title = '', content = '', background_color = '#ffffff' } = req.body;
+  const { title = '', content = '', background_color = '#ffffff', checklist = [] } = req.body;
 
-  if (!content && !title) {
+  if (!content && !title && (!Array.isArray(checklist) || checklist.length === 0)) {
     return res.status(400).json({ message: 'Catatan tidak boleh kosong.' });
   }
 
@@ -84,9 +84,9 @@ export const createNote = async (req, res) => {
     await client.query('BEGIN');
 
     const { rows } = await client.query(
-      `INSERT INTO notes (user_id, title, content, background_color)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [req.user.id, title, content, background_color]
+      `INSERT INTO notes (user_id, title, content, checklist, background_color)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [req.user.id, title, content, checklist, background_color]
     );
     const note = rows[0];
 
@@ -107,7 +107,7 @@ export const createNote = async (req, res) => {
 export const updateNote = async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
-  const { title, content, background_color, is_pinned, is_archived } = updates;
+  const { title, content, checklist, background_color, is_pinned, is_archived } = updates;
 
   const client = await pool.connect();
   try {
@@ -156,6 +156,10 @@ export const updateNote = async (req, res) => {
       updateFields.push(`background_color = $${paramCount++}`);
       updateValues.push(background_color);
     }
+    if (checklist !== undefined && checklist !== null) {
+      updateFields.push(`checklist = $${paramCount++}`);
+      updateValues.push(checklist);
+    }
     if (isOwner && is_pinned !== undefined && is_pinned !== null) {
       updateFields.push(`is_pinned = $${paramCount++}`);
       updateValues.push(is_pinned);
@@ -179,6 +183,7 @@ export const updateNote = async (req, res) => {
          n.user_id,
          n.title,
          n.content,
+         n.checklist,
          n.background_color,
          n.is_pinned,
          n.is_archived,

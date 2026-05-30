@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Pin, Trash2, Palette, Archive, Users } from 'lucide-react';
 import FocusModal from './FocusModal.jsx';
@@ -34,9 +34,39 @@ export default function NoteCard({ note, onUpdate, onDelete, onPin }) {
   const [showFocus,   setShowFocus]   = useState(false);
   const [showCollab,  setShowCollab]  = useState(false);
 
+  // Inject checklist styles for preview rendering (if not already present)
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (document.getElementById('deNotes-task-styles')) return;
+    const css = `
+    .task-list { list-style: none; padding-left: 0; }
+    .task-item { display: flex; align-items: center; gap: 0.5rem; }
+    .task-item .task-checkbox, .task-item input[type="checkbox"] { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 6px; border: 2px solid #cbd5e1; background: white; display: inline-grid; place-items: center; }
+    .task-item .task-checkbox:checked, .task-item input[type="checkbox"]:checked { background: #2563eb; border-color: #2563eb; }
+    .task-item .task-checkbox:checked::after, .task-item input[type="checkbox"]:checked::after { content: ''; width: 8px; height: 5px; border-left: 2px solid white; border-bottom: 2px solid white; transform: rotate(-45deg); display: block; }
+    .task-item .task-text, .task-item label > span, .task-item label > p { display: inline-block; }
+    .task-item .task-checkbox:checked + .task-text, .task-item input[type="checkbox"]:checked + .task-text, .task-item input[type="checkbox"]:checked + span { text-decoration: line-through; color: #6b7280; opacity: 0.6; }
+    .checked-item { text-decoration: line-through; opacity: 0.6; }
+    .checked-item span { opacity: 0.6; }
+  `;
+    const style = document.createElement('style');
+    style.id = 'deNotes-task-styles';
+    style.appendChild(document.createTextNode(css));
+    document.head.appendChild(style);
+  }, []);
+
   const isOwner = note.is_owner !== false;
   const canEdit = isOwner || note.collab_role === 'editor';
   const isHTML  = typeof note.content === 'string' && note.content.trimStart().startsWith('<');
+  const checklistItems = Array.isArray(note.checklist) ? note.checklist : [];
+
+  const handleToggleChecklist = (itemId, checked) => {
+    if (!canEdit) return;
+    const nextChecklist = checklistItems.map(item =>
+      item.id === itemId ? { ...item, done: checked } : item
+    );
+    onUpdate(note.id, { checklist: nextChecklist });
+  };
 
   const handleColorChange = (hex) => {
     onUpdate(note.id, { background_color: hex });
@@ -102,6 +132,25 @@ export default function NoteCard({ note, onUpdate, onDelete, onPin }) {
               {note.content}
             </p>
           )
+        )}
+
+        {checklistItems.length > 0 && (
+          <div className="mt-3 space-y-2 text-sm text-gray-700">
+            {checklistItems.map(item => (
+              <label key={item.id} className="flex items-start gap-2 transition-all duration-300">
+                <input
+                  type="checkbox"
+                  checked={item.done}
+                  disabled={!canEdit}
+                  onChange={e => handleToggleChecklist(item.id, e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-all duration-300"
+                />
+                <span className={`transition-all duration-300 ${item.done ? 'line-through opacity-50 text-gray-500' : 'text-gray-700'}`}>
+                  {item.text}
+                </span>
+              </label>
+            ))}
+          </div>
         )}
 
         {/* Toolbar */}
@@ -195,3 +244,5 @@ export default function NoteCard({ note, onUpdate, onDelete, onPin }) {
     </>
   );
 }
+
+// (Styles are injected inside the component to avoid invalid hook calls.)
