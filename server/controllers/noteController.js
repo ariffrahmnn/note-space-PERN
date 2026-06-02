@@ -1,16 +1,16 @@
-// server/controllers/noteController.js
-// Versi lengkap — ganti seluruh file ini
+
+
 
 import pool from '../config/db.js';
 
-// ─── Helper: catat history ───────────────────────────────────────────────────
+
 const logHistory = (client, note_id, user_id, action) =>
   client.query(
     'INSERT INTO note_histories (note_id, user_id, action) VALUES ($1, $2, $3)',
     [note_id, user_id, action]
   );
 
-// Bandingkan field lama vs baru, hasilkan deskripsi perubahan
+
 const buildActionText = (old, next) => {
   const changes = [];
   if (next.title     !== undefined && next.title     !== old.title)            changes.push('mengubah judul');
@@ -21,7 +21,7 @@ const buildActionText = (old, next) => {
   return changes.length ? changes.join(', ') : 'memperbarui catatan';
 };
 
-// ─── GET /api/notes ──────────────────────────────────────────────────────────
+
 export const getNotes = async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -46,7 +46,7 @@ export const getNotes = async (req, res) => {
   }
 };
 
-// ─── GET /api/notes/archived ───────────────────────────────────────────────
+
 export const getArchivedNotes = async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -71,7 +71,7 @@ export const getArchivedNotes = async (req, res) => {
   }
 };
 
-// ─── POST /api/notes ─────────────────────────────────────────────────────────
+
 export const createNote = async (req, res) => {
   const { title = '', content = '', background_color = '#ffffff', checklist = [] } = req.body;
 
@@ -103,7 +103,7 @@ export const createNote = async (req, res) => {
   }
 };
 
-// ─── PUT /api/notes/:id ──────────────────────────────────────────────────────
+
 export const updateNote = async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
@@ -139,7 +139,7 @@ export const updateNote = async (req, res) => {
 
     const actionText = buildActionText(oldNote, updates);
 
-    // Hanya update field yang explisit dikirim — hindari mengganti dengan NULL
+    
     const updateFields = [];
     const updateValues = [];
     let paramCount = 1;
@@ -213,7 +213,7 @@ export const updateNote = async (req, res) => {
   }
 };
 
-// ─── DELETE /api/notes/:id ───────────────────────────────────────────────────
+
 export const deleteNote = async (req, res) => {
   const { id } = req.params;
 
@@ -232,7 +232,7 @@ export const deleteNote = async (req, res) => {
   }
 };
 
-// ─── GET /api/notes/:id/history ─────────────────────────────────────────────
+
 export const getNoteHistory = async (req, res) => {
   const { id } = req.params;
 

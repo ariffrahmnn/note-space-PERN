@@ -1,5 +1,5 @@
-// client/src/components/CollabModal.jsx
-// Modal undang kolaborator — bisa dipanggil dari NoteCard
+
+
 
 import { useState, useEffect } from 'react';
 import { X, Search, UserPlus, Loader } from 'lucide-react';
@@ -9,9 +9,9 @@ export default function CollabModal({ note, onClose }) {
   const { results, loading, error, search, invite, clear } = useUserSearch();
   const [query, setQuery]   = useState('');
   const [role, setRole]     = useState('viewer');
-  const [status, setStatus] = useState(null); // { type: 'success'|'error', msg }
+  const [status, setStatus] = useState(null); 
 
-  // Debounce pencarian
+  
   useEffect(() => {
     const timer = setTimeout(() => search(query), 400);
     return () => clearTimeout(timer);
@@ -38,7 +38,7 @@ export default function CollabModal({ note, onClose }) {
         className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
+        
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-gray-800">Undang Kolaborator</h2>
           <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100 text-gray-400">
@@ -58,7 +58,7 @@ export default function CollabModal({ note, onClose }) {
           )}
         </p>
 
-        {/* Role selector */}
+        
         <div className="flex gap-2 mb-4">
           {['viewer', 'editor'].map(r => (
             <button
@@ -75,7 +75,7 @@ export default function CollabModal({ note, onClose }) {
           ))}
         </div>
 
-        {/* Search input */}
+        
         <div className="relative mb-3">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -90,7 +90,7 @@ export default function CollabModal({ note, onClose }) {
           )}
         </div>
 
-        {/* Status message */}
+        
         {status && (
           <p className={`text-xs mb-3 px-3 py-2 rounded-lg ${
             status.type === 'success'
@@ -101,10 +101,10 @@ export default function CollabModal({ note, onClose }) {
           </p>
         )}
 
-        {/* Error */}
+        
         {error && <p className="text-xs text-red-400 mb-3">{error}</p>}
 
-        {/* Search results */}
+        
         {results.length > 0 && (
           <ul className="border border-gray-100 rounded-xl overflow-hidden">
             {results.map(user => (

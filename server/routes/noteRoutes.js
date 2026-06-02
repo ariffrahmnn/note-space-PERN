@@ -10,6 +10,6 @@ router.post('/',          createNote);
 router.get('/archived',   getArchivedNotes);
 router.put('/:id',        updateNote);
 router.delete('/:id',     deleteNote);
-router.get('/:id/history', getNoteHistory);  // <-- route baru
+router.get('/:id/history', getNoteHistory);  
 
 export default router;

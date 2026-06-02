@@ -8,7 +8,7 @@ export default function ConfirmCard({
   onCancel, 
   confirmLabel = 'Ya', 
   cancelLabel = 'Batal',
-  type = 'warning' // 'warning', 'success', 'error', 'info'
+  type = 'warning' 
 }) {
   const iconConfig = {
     warning: { icon: AlertTriangle, color: 'text-amber-500', bg: 'bg-amber-50' },
@@ -22,7 +22,7 @@ export default function ConfirmCard({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop blur */}
+      
       <motion.div 
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         initial={{ opacity: 0 }}
@@ -31,7 +31,7 @@ export default function ConfirmCard({
         onClick={onCancel}
       />
 
-      {/* Card */}
+      
       <motion.div 
         className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full overflow-hidden"
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -39,17 +39,17 @@ export default function ConfirmCard({
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       >
-        {/* Icon header */}
+        
         <div className={`${config.bg} w-14 h-14 rounded-full flex items-center justify-center mb-4 mx-auto`}>
           <IconComponent className={`${config.color} w-7 h-7`} />
         </div>
 
-        {/* Message */}
+        
         <p className="text-gray-700 text-center mb-6 font-medium leading-relaxed">
           {message}
         </p>
 
-        {/* Action buttons */}
+        
         <div className="flex justify-center gap-3">
           <motion.button
             type="button"

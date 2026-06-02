@@ -1,11 +1,11 @@
-// server/controllers/collabController.js
-// Snippet baru — tidak mengubah file yang sudah ada
+
+
 
 import pool from '../config/db.js';
 import { decrypt } from '../utils/encryption.js';
 
-// POST /api/notes/:id/invite
-// Body: { invitee_id, role: 'viewer'|'editor' }
+
+
 export const inviteCollaborator = async (req, res) => {
   const { id: note_id } = req.params;
   const { invitee_id, role = 'viewer' } = req.body;
@@ -25,7 +25,7 @@ export const inviteCollaborator = async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    // Verifikasi catatan milik owner
+    
     const noteCheck = await client.query(
       'SELECT id, title, is_encrypted FROM notes WHERE id = $1 AND user_id = $2',
       [note_id, owner_id]
@@ -35,7 +35,7 @@ export const inviteCollaborator = async (req, res) => {
       return res.status(404).json({ message: 'Catatan tidak ditemukan atau bukan milikmu.' });
     }
 
-    // Verifikasi invitee exist
+    
     const inviteeCheck = await client.query(
       'SELECT id, username FROM users WHERE id = $1',
       [invitee_id]
@@ -55,7 +55,7 @@ export const inviteCollaborator = async (req, res) => {
       : note.title || 'Catatan tanpa judul';
     const noteTitlePlain = stripHtml(noteTitle) || 'Catatan tanpa judul';
 
-    // Insert kolaborasi (ON CONFLICT update role jika sudah ada)
+    
     const { rows: collabRows } = await client.query(
       `INSERT INTO note_collaborators (note_id, owner_id, invitee_id, role, status)
        VALUES ($1, $2, $3, $4, 'pending')
@@ -67,7 +67,7 @@ export const inviteCollaborator = async (req, res) => {
 
     const collab = collabRows[0];
 
-    // Buat notifikasi untuk invitee
+    
     const senderInfo = await client.query(
       'SELECT username FROM users WHERE id = $1',
       [owner_id]
@@ -100,7 +100,7 @@ export const inviteCollaborator = async (req, res) => {
 const stripHtml = (value = '') =>
   value.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 
-// DELETE /api/notes/:id/leave
+
 export const leaveCollaborator = async (req, res) => {
   const { id: noteId } = req.params;
 
@@ -162,7 +162,7 @@ export const leaveCollaborator = async (req, res) => {
   }
 };
 
-// GET /api/notes/:id/collaborators
+
 export const getCollaborators = async (req, res) => {
   const { id: note_id } = req.params;
 
@@ -183,7 +183,7 @@ export const getCollaborators = async (req, res) => {
   }
 };
 
-// DELETE /api/notes/:noteId/collaborators/:collabId
+
 export const removeCollaborator = async (req, res) => {
   const { noteId, collabId } = req.params;
 

@@ -28,12 +28,12 @@ export const useNotes = () => {
 
   const updateNote = async (id, updates) => {
     try {
-      // Validasi bahwa content (jika ada) bukan undefined
+      
       if (updates.content === undefined) {
         console.warn('updateNote: content is undefined, akan gunakan nilai lama');
-        delete updates.content;  // Jangan kirim undefined
+        delete updates.content;  
       } else {
-        // Debug: log content yang dikirim
+        
         console.log('[updateNote] Mengirim content:', {
           length: updates.content.length,
           hasImage: updates.content.includes('<img'),
@@ -43,12 +43,12 @@ export const useNotes = () => {
       
       const { data } = await axios.put(`/api/notes/${id}`, updates);
       
-      // Pastikan response valid sebelum update state
+      
       if (!data || !data.id) {
         throw new Error('Invalid response from server');
       }
       
-      // Debug: log response content
+      
       console.log('[updateNote Response]', {
         contentLength: data.content?.length || 0,
         hasImage: data.content?.includes('<img') || false,

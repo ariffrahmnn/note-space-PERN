@@ -1,4 +1,4 @@
-// server/routes/collabRoutes.js
+
 import { Router } from 'express';
 import {
   inviteCollaborator,
@@ -8,12 +8,12 @@ import {
 } from '../controllers/collabController.js';
 import protect from '../middleware/authMiddleware.js';
 
-const router = Router({ mergeParams: true }); // penting untuk akses :noteId dari parent
+const router = Router({ mergeParams: true }); 
 router.use(protect);
 
-router.post('/invite', inviteCollaborator);           // POST /api/notes/:id/invite
-router.get('/collaborators', getCollaborators);       // GET  /api/notes/:id/collaborators
-router.delete('/collaborators/:collabId', removeCollaborator); // DELETE /api/notes/:noteId/collaborators/:collabId
-router.delete('/leave', leaveCollaborator);           // DELETE /api/notes/:id/leave
+router.post('/invite', inviteCollaborator);           
+router.get('/collaborators', getCollaborators);       
+router.delete('/collaborators/:collabId', removeCollaborator); 
+router.delete('/leave', leaveCollaborator);           
 
 export default router;

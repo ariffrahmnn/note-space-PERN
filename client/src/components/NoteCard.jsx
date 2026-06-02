@@ -34,7 +34,7 @@ export default function NoteCard({ note, onUpdate, onDelete, onPin }) {
   const [showFocus,   setShowFocus]   = useState(false);
   const [showCollab,  setShowCollab]  = useState(false);
 
-  // Inject checklist styles for preview rendering (if not already present)
+  
   useEffect(() => {
     if (typeof document === 'undefined') return;
     if (document.getElementById('deNotes-task-styles')) return;
@@ -87,13 +87,13 @@ export default function NoteCard({ note, onUpdate, onDelete, onPin }) {
   return (
     <>
       <motion.div
-        // HAPUS layout={true} — layout prop override ukuran grid
+        
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.15 }}
 
-        // w-full mengisi lebar kolom grid, overflow-hidden cegah konten meluber
+        
         className="w-full group relative rounded-2xl border border-gray-200 p-4 overflow-hidden
                    transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
         style={{ backgroundColor: note.background_color || '#ffffff' }}
@@ -153,7 +153,7 @@ export default function NoteCard({ note, onUpdate, onDelete, onPin }) {
           </div>
         )}
 
-        {/* Toolbar */}
+        
         <div
           className="flex items-center gap-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={e => e.stopPropagation()}
@@ -245,4 +245,4 @@ export default function NoteCard({ note, onUpdate, onDelete, onPin }) {
   );
 }
 
-// (Styles are injected inside the component to avoid invalid hook calls.)
+

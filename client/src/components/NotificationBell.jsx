@@ -1,5 +1,5 @@
-// client/src/components/NotificationBell.jsx
-// Tambahkan komponen ini ke Navbar.jsx yang sudah ada
+
+
 
 import { useState } from 'react';
 import { Bell, Check, X, Users } from 'lucide-react';
@@ -15,7 +15,7 @@ export default function NotificationBell() {
 
   return (
     <div className="relative">
-      {/* Bell button */}
+      
       <button
         onClick={() => setOpen(p => !p)}
         className="relative p-1.5 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
@@ -29,16 +29,16 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* Dropdown panel */}
+      
       {open && (
         <>
-          {/* Backdrop */}
+          
           <div
             className="fixed inset-0 z-20"
             onClick={() => setOpen(false)}
           />
           <div className="absolute right-0 top-9 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl z-30 overflow-hidden">
-            {/* Header */}
+            
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
               <span className="text-sm font-medium text-gray-700">Notifikasi</span>
               {unreadCount > 0 && (
@@ -51,7 +51,7 @@ export default function NotificationBell() {
               )}
             </div>
 
-            {/* List */}
+            
             <div className="max-h-80 overflow-y-auto">
               {notifications.length === 0 ? (
                 <div className="py-10 text-center text-gray-400 text-sm">
@@ -73,7 +73,7 @@ export default function NotificationBell() {
                       })}
                     </p>
 
-                    {/* Tombol terima/tolak hanya untuk undangan yang belum direspons */}
+                    
                     {notif.type === 'collab_invite' && !notif.is_read && (
                       <div className="flex gap-2 mt-2">
                         <button

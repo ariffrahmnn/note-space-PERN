@@ -15,6 +15,10 @@ export default function LoginPage() {
     setForm({ email: '', password: '' });
   }, []);
 
+  
+const handleGoogleLogin = () => {
+  window.location.href = 'http://localhost:4000/api/auth/google';
+};
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -78,6 +82,13 @@ export default function LoginPage() {
             {loading ? 'Masuk...' : 'Masuk'}
           </button>
         </form>
+
+        
+          <button
+            onClick={handleGoogleLogin}
+            className="w-full mt-4 flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 transition"
+          >Masuk dengan Google</button>
+
 
         <p className="text-center text-sm text-gray-400 mt-5">
           Belum punya akun?{' '}

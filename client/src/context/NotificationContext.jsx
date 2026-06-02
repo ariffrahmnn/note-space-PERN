@@ -1,5 +1,5 @@
-// client/src/context/NotificationContext.jsx
-// Context terpisah dari AuthContext — tidak merusak yang sudah ada
+
+
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
@@ -27,7 +27,7 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [isAuth]);
 
-  // Poll setiap 30 detik saat user login
+  
   useEffect(() => {
     if (!isAuth) {
       setNotifications([]);
@@ -41,7 +41,7 @@ export const NotificationProvider = ({ children }) => {
 
   const respond = async (notifId, action) => {
     await axios.post(`/api/notifications/${notifId}/respond`, { action });
-    // Update state lokal tanpa re-fetch
+    
     setNotifications(prev =>
       prev.map(n => n.id === notifId ? { ...n, is_read: true } : n)
     );

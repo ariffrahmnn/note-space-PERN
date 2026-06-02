@@ -6,7 +6,22 @@ const generateToken = (id, email) =>
   jwt.sign({ id, email }, process.env.JWT_SECRET, {
   });
 
-// POST /api/auth/register
+export const googleLogin = async (req, res) => {
+
+  const user = req.user;
+
+  if (!user) {
+    return res.status(401).json({ message: 'Autentikasi Google gagal.' });
+  }
+
+  
+  const token = generateToken(user.id, user.email);
+
+  
+  res.redirect(`http://localhost:5173/auth/callback?token=${token}`);
+};
+
+
 export const register = async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -43,7 +58,7 @@ export const register = async (req, res) => {
   }
 };
 
-// POST /api/auth/login
+
 export const login = async (req, res) => {
   const { email, password } = req.body;
 

@@ -1,10 +1,10 @@
-// server/controllers/notificationController.js
-// Snippet baru — tidak mengubah file yang sudah ada
+
+
 
 import pool from '../config/db.js';
 
-// GET /api/notifications
-// Ambil semua notifikasi milik user yang login
+
+
 export const getNotifications = async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -25,8 +25,8 @@ export const getNotifications = async (req, res) => {
   }
 };
 
-// POST /api/notifications/:id/respond
-// Body: { action: 'accept' | 'reject' }
+
+
 export const respondToNotification = async (req, res) => {
   const { id: notif_id } = req.params;
   const { action } = req.body;
@@ -39,7 +39,7 @@ export const respondToNotification = async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    // Ambil notifikasi + validasi pemilik
+    
     const { rows: notifRows } = await client.query(
       `SELECT n.*, nc.owner_id, nc.note_id, nc.role
        FROM notifications n
@@ -56,19 +56,19 @@ export const respondToNotification = async (req, res) => {
     const notif = notifRows[0];
     const newStatus = action === 'accept' ? 'accepted' : 'rejected';
 
-    // Update status kolaborasi
+    
     await client.query(
       'UPDATE note_collaborators SET status = $1 WHERE id = $2',
       [newStatus, notif.note_collaborator_id]
     );
 
-    // Tandai notifikasi sebagai dibaca
+    
     await client.query(
       'UPDATE notifications SET is_read = true WHERE id = $1',
       [notif_id]
     );
 
-    // Kirim notifikasi balik ke owner
+    
     const responderInfo = await client.query(
       'SELECT username FROM users WHERE id = $1',
       [req.user.id]
@@ -97,8 +97,8 @@ export const respondToNotification = async (req, res) => {
   }
 };
 
-// PATCH /api/notifications/read-all
-// Tandai semua notifikasi sebagai sudah dibaca
+
+
 export const markAllRead = async (req, res) => {
   try {
     await pool.query(

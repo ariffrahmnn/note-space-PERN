@@ -58,7 +58,7 @@ export default function ArchivePage() {
       <Navbar />
 
       <main className="max-w-6xl mx-auto pt-8 pb-16 px-4">
-        {/* Header */}
+        
         <div className="flex items-center gap-5 mb-8">
           <Link
             to="/"
@@ -100,7 +100,7 @@ export default function ArchivePage() {
                   note={note}
                   onUpdate={unarchiveNote}
                   onDelete={deleteNote}
-                  onPin={() => {}} // Archive page doesn't need pin functionality
+                  onPin={() => {}} 
                   isArchivePage={true}
                 />
               ))}

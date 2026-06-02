@@ -3,8 +3,8 @@ import NoteCard from '../components/NoteCard.jsx';
 import NoteForm from '../components/NoteForm.jsx';
 import { useNotes } from '../hooks/useNotes.js';
 
-// AnimatePresence DIHAPUS dari sini — motion.div di NoteCard sudah cukup
-// Grid harus punya direct children berupa elemen nyata, bukan fragment
+
+
 
 export default function Dashboard() {
   const { notes, loading, error, addNote, updateNote, deleteNote, togglePin } = useNotes();

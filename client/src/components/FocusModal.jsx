@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useNoteHistory } from '../hooks/useNoteHistory.js';
 
-// ─── Toolbar button ───────────────────────────────────────────────────────────
+
 const ToolBtn = ({ onClick, active, title, disabled, children }) => (
   <button
     type="button"
@@ -35,24 +35,24 @@ const timeAgo = (dateStr) => {
   return `${Math.floor(diff / 86400)} hari yang lalu`;
 };
 
-// ─── FocusModal ──────────────────────────────────────────────────────────────
+
 export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
   const titleRef = useRef(null);
   const { history, loading: histLoading, fetchHistory } = useNoteHistory();
 
-  // Fetch history saat pertama buka (hanya untuk note existing)
+  
   useEffect(() => {
     if (note.id) fetchHistory(note.id);
   }, [note.id, fetchHistory]);
 
-  // Tutup dengan Esc
+  
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  // Tiptap editor — read-only kalau viewer
+  
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -63,7 +63,7 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
         HTMLAttributes: { class: 'text-blue-500 underline cursor-pointer' },
       }),
       Image.configure({
-        allowBase64: true,  // Allow base64 data URIs
+        allowBase64: true,  
         HTMLAttributes: { class: 'rounded-xl max-w-full my-3' },
       }),
     ],
@@ -78,7 +78,7 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
     },
   });
 
-  // ✅ Sync editor content dan judul saat note berubah
+  
   useEffect(() => {
     if (!editor) return;
 
@@ -100,13 +100,13 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
 
   const isEmptyContent = (html) => {
     if (!html) return true;
-    // Jangan treat sebagai empty jika ada image, bahkan jika hanya image saja
+    
     if (html.includes('<img')) return false;
     
     const normalized = html
       .replace(/<p>(?:\s|<br\s*\/?>)*<\/p>/gi, '')
       .replace(/<!--.*?-->/g, '')
-      .replace(/<[^>]*>/g, '')  // Remove all tags
+      .replace(/<[^>]*>/g, '')  
       .trim();
     return normalized === '';
   };
@@ -114,10 +114,10 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
   const handleSave = useCallback(async () => {
     if (!editor) return;
     const html = editor.getHTML();
-    // Selalu kirim content (jangan kosongkan), kecuali truly empty (tanpa image dan tanpa text)
+    
     const content = isEmptyContent(html) ? '' : html;
 
-    // Debug: pastikan content dengan gambar dikirim ke server
+    
     const contentLength = content.length;
     const hasImage = content.includes('<img');
     console.log('[FocusModal Save]', {
@@ -130,7 +130,7 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
     try {
       const result = await onSave(note.id, {
         title:   titleRef.current?.value ?? note.title,
-        content,  // Selalu kirim, undefined akan cause masalah
+        content,  
       });
       console.log('[FocusModal Save Response]', {
         returnedContentLength: result?.content?.length || 0,
@@ -150,13 +150,13 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
     await onSave(note.id, { checklist: nextChecklist });
   };
 
-  // Toggle a checkbox (task item) at the current line.
-  // Uses Tiptap TaskItem/TaskList commands so the checkbox appears at the
-  // beginning of the active block and the editor's selection is preserved.
+  
+  
+  
   const handleToggleCheckbox = () => {
     if (!editor || !canEdit) return;
 
-    // Determine the block (line) boundaries and the cursor offset inside it.
+    
     const { state } = editor;
     const { selection } = state;
     const { $from } = selection;
@@ -164,23 +164,23 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
     const blockEnd = $from.end();
     const cursorOffsetInBlock = selection.from - blockStart;
 
-    // Select the whole block to ensure toggle applies to the entire line
-    // regardless of where the cursor is.
+    
+    
     try {
       editor.chain().focus().setTextSelection({ from: blockStart, to: blockEnd }).run();
     } catch (e) {
-      // setTextSelection may throw on some versions; fall back to a no-op selection
+      
     }
 
-    // Toggle using TipTap commands if available
+    
     if (editor.commands.toggleTaskItem) {
       editor.chain().focus().toggleTaskItem().run();
     } else if (editor.commands.toggleTaskList) {
       editor.chain().focus().toggleTaskList().run();
     } else {
-      // Fallback: insert an inline label with checkbox followed by text
+      
       try {
-        // If current block has text, replace it with a label that contains the checkbox and the text
+        
         const blockText = editor.state.doc.textBetween(blockStart, blockEnd, '\n');
         const safeText = blockText.replaceAll('\n', '<br/>');
         const html = `<label class=\"task-item inline-flex items-center gap-2\"><input type=\"checkbox\" class=\"task-checkbox\" /><span class=\"task-text\">${safeText}</span></label>`;
@@ -190,21 +190,21 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
       }
     }
 
-    // Restore cursor to a sensible position: after the checkbox at the same
-    // logical offset within the line so the user can continue typing.
+    
+    
     try {
-      // Heuristic: place cursor after the injected checkbox marker.
+      
       const postCheckboxOffset = blockStart + 2 + cursorOffsetInBlock;
       editor.chain().focus().setTextSelection(postCheckboxOffset).run();
     } catch (e) {
-      // ignore selection restore failures
+      
     }
   };
 
   const createChecklistItemId = () =>
     window.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-  // Inject CSS for task checkbox styling and checked-line-through in editor
+  
   useEffect(() => {
     if (typeof document === 'undefined') return;
     if (document.getElementById('deNotes-task-styles')) return;
@@ -285,18 +285,18 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
   };
 
   return (
-    // ── Backdrop ──────────────────────────────────────────────────────────────
+    
     <div
       className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
-      {/* ── Modal panel ───────────────────────────────────────────────────── */}
+      
       <div
         className="w-full max-w-3xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden"
         style={{ backgroundColor: note.background_color || '#ffffff' }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
+        
         <div className="flex items-center gap-3 px-5 pt-4 pb-3 border-b border-black/5">
           <input
             ref={titleRef}
@@ -314,13 +314,13 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
           </button>
         </div>
 
-        {/* Body */}
+        
         <div className="flex flex-1 overflow-hidden">
 
-          {/* ── Editor column ──────────────────────────────────────────────── */}
+          
           <div className="flex flex-1 flex-col overflow-hidden">
 
-            {/* Toolbar (disabled bila viewer) */}
+            
             <div className="flex items-center gap-0.5 px-4 py-2 border-b border-black/5 flex-wrap">
               <ToolBtn disabled={!canEdit}
                 onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
@@ -369,7 +369,7 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
               )}
             </div>
 
-            {/* Editor content */}
+            
             <div className="flex-1 overflow-y-auto px-5 py-4">
               <EditorContent editor={editor} />
 
@@ -414,7 +414,7 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
               )}
             </div>
 
-            {/* Footer */}
+            
             <div className="flex justify-end gap-2 px-5 py-3 border-t border-black/5">
               <button
                 onClick={onClose}
@@ -433,7 +433,7 @@ export default function FocusModal({ note, canEdit = true, onClose, onSave }) {
             </div>
           </div>
 
-          {/* ── History panel ──────────────────────────────────────────────── */}
+          
           <div className="w-52 flex-shrink-0 border-l border-black/5 flex flex-col bg-black/[0.02]">
             <div className="flex items-center gap-1.5 px-3 py-3 border-b border-black/5">
               <Clock size={12} className="text-gray-400" />

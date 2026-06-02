@@ -1,9 +1,9 @@
-// server/controllers/userController.js
-// Snippet baru — tidak mengubah file yang sudah ada
+
+
 
 import pool from '../config/db.js';
 
-// GET /api/users?search=<username or email>
+
 export const searchUsers = async (req, res) => {
   const { search } = req.query;
 
@@ -21,7 +21,7 @@ export const searchUsers = async (req, res) => {
       [`%${search.trim()}%`, req.user.id]
     );
 
-    // Jangan expose password — hanya id, username, email
+    
     res.json(rows);
   } catch (err) {
     console.error('searchUsers error:', err.message);
