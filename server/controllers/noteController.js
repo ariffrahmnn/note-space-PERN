@@ -1,9 +1,4 @@
-
-
-
 import pool from '../config/db.js';
-
-
 const logHistory = (client, note_id, user_id, action) =>
   client.query(
     'INSERT INTO note_histories (note_id, user_id, action) VALUES ($1, $2, $3)',

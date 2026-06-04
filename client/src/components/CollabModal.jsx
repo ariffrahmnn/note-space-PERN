@@ -1,6 +1,3 @@
-
-
-
 import { useState, useEffect } from 'react';
 import { X, Search, UserPlus, Loader } from 'lucide-react';
 import { useUserSearch } from '../hooks/useUserSearch.js';

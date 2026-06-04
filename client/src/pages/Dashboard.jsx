@@ -3,9 +3,6 @@ import NoteCard from '../components/NoteCard.jsx';
 import NoteForm from '../components/NoteForm.jsx';
 import { useNotes } from '../hooks/useNotes.js';
 
-
-
-
 export default function Dashboard() {
   const { notes, loading, error, addNote, updateNote, deleteNote, togglePin } = useNotes();
 
