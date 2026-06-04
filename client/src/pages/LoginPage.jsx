@@ -17,7 +17,7 @@ export default function LoginPage() {
 
   
 const handleGoogleLogin = () => {
-  window.location.href = 'http://localhost:4000/api/auth/google';
+  window.location.href = 'https://note-space-pern-production.up.railway.app/api/auth/google';
 };
   const handleSubmit = async (e) => {
     e.preventDefault();
