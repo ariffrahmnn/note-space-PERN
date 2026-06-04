@@ -20,9 +20,8 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      const { data } = await axios.post('/api/auth/register', form);
-      login(data.user, data.token);
-      navigate('/');
+      await axios.post('/api/auth/register', form);
+      navigate('/login');
     } catch (err) {
       setError(err.response?.data?.message || 'Registrasi gagal.');
     } finally {
